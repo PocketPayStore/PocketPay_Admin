@@ -1,6 +1,7 @@
 package pocketpaystore.pocketpay_admin.payment.service;
 
 import java.util.List;
+import java.time.LocalDate;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,6 +12,7 @@ import pocketpaystore.pocketpay_admin.common.exception.errorcode.PaymentErrorCod
 import pocketpaystore.pocketpay_admin.payment.dto.request.PaymentSearchCondition;
 import pocketpaystore.pocketpay_admin.payment.dto.response.PaymentDetailResponse;
 import pocketpaystore.pocketpay_admin.payment.dto.response.PaymentStatusHistoryResponse;
+import pocketpaystore.pocketpay_admin.payment.dto.response.PaymentStatisticsResponse;
 import pocketpaystore.pocketpay_admin.payment.dto.response.PaymentSummaryResponse;
 import pocketpaystore.pocketpay_admin.payment.repository.PaymentRepository;
 
@@ -34,5 +36,10 @@ public class PaymentService {
 			throw new CustomException(PaymentErrorCode.PAYMENT_NOT_FOUND);
 		}
 		return paymentRepository.findPaymentStatusHistories(paymentId);
+	}
+
+	public PaymentStatisticsResponse findPaymentStatistics() {
+		LocalDate today = LocalDate.now();
+		return paymentRepository.findPaymentStatistics(today.atStartOfDay(), today.plusDays(1).atStartOfDay());
 	}
 }
