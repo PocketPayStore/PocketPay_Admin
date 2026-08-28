@@ -53,7 +53,7 @@ jobs:
             --document-name "AWS-RunShellScript" \
             --comment "Deploy pocketpay-admin ${{ github.sha }}" \
             --parameters 'commands=[
-              "aws s3 cp s3://${{ vars.DEPLOY_BUCKET }}/pocketpay-admin/app.jar /home/ubuntu/pocketpay-admin/app.jar",
+              "aws s3 cp s3://${{ vars.DEPLOY_BUCKET }}/pocketpay-admin/app.jar /home/ec2-user/pocketpay-admin/app.jar",
               "sudo systemctl restart pocketpay-admin"
             ]' \
             --query "Command.CommandId" \
