@@ -24,4 +24,12 @@ class PaymentPageControllerTest {
 				.andExpect(content().string(containsString("PocketPay")))
 				.andExpect(content().string(containsString("결제 관리")));
 	}
+
+	@Test
+	void 확인_필요_결제_화면을_반환한다() throws Exception {
+		mockMvc.perform(get("/admin/payments/attention"))
+				.andExpect(status().isOk())
+				.andExpect(view().name("payment/attention"))
+				.andExpect(content().string(containsString("확인 필요 결제")));
+	}
 }

@@ -9,4 +9,9 @@ public class PaymentPageController {
 	public String payments() {
 		return "payment/list";
 	}
+
+	@GetMapping("/admin/payments/attention")
+	public String attentionPayments() {
+		return "payment/attention";
+	}
 }
