@@ -3,6 +3,7 @@ package pocketpaystore.pocketpay_admin.payment.repository;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -70,6 +71,20 @@ class PaymentRepositoryTest {
 		assertThat(responses)
 				.extracting("status")
 				.containsExactly(PaymentStatus.READY, PaymentStatus.IN_PROGRESS, PaymentStatus.DONE);
+	}
+
+	@Test
+	void 전체와_오늘_결제_통계를_조회한다() {
+		LocalDate today = LocalDate.now();
+
+		var response = paymentRepository.findPaymentStatistics(
+				today.atStartOfDay(), today.plusDays(1).atStartOfDay());
+
+		assertThat(response.getTotalCount()).isEqualTo(2L);
+		assertThat(response.getTodayCount()).isEqualTo(2L);
+		assertThat(response.getTodayAmount()).isEqualTo(30_000L);
+		assertThat(response.getTodayDoneCount()).isEqualTo(1L);
+		assertThat(response.getTodayAttentionCount()).isZero();
 	}
 
 	private void insertOrder(Long id, String orderNumber, LocalDateTime createdAt) {

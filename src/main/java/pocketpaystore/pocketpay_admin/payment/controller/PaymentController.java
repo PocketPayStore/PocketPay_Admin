@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import pocketpaystore.pocketpay_admin.payment.dto.request.PaymentSearchCondition;
 import pocketpaystore.pocketpay_admin.payment.dto.response.PaymentDetailResponse;
 import pocketpaystore.pocketpay_admin.payment.dto.response.PaymentStatusHistoryResponse;
+import pocketpaystore.pocketpay_admin.payment.dto.response.PaymentStatisticsResponse;
 import pocketpaystore.pocketpay_admin.payment.dto.response.PaymentSummaryResponse;
 import pocketpaystore.pocketpay_admin.payment.service.PaymentService;
 
@@ -28,6 +29,11 @@ public class PaymentController {
 	@GetMapping
 	public List<PaymentSummaryResponse> findPayments(@Valid @ModelAttribute PaymentSearchCondition condition) {
 		return paymentService.findPayments(condition);
+	}
+
+	@GetMapping("/statistics")
+	public PaymentStatisticsResponse findPaymentStatistics() {
+		return paymentService.findPaymentStatistics();
 	}
 
 	@GetMapping("/{paymentId}")

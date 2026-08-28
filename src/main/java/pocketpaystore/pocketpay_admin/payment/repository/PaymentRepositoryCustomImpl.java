@@ -10,6 +10,7 @@ import java.util.Optional;
 
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,7 @@ import pocketpaystore.pocketpay_admin.payment.domain.PaymentStatus;
 import pocketpaystore.pocketpay_admin.payment.dto.request.PaymentSearchCondition;
 import pocketpaystore.pocketpay_admin.payment.dto.response.PaymentDetailResponse;
 import pocketpaystore.pocketpay_admin.payment.dto.response.PaymentStatusHistoryResponse;
+import pocketpaystore.pocketpay_admin.payment.dto.response.PaymentStatisticsResponse;
 import pocketpaystore.pocketpay_admin.payment.dto.response.PaymentSummaryResponse;
 
 @RequiredArgsConstructor
@@ -67,6 +69,32 @@ public class PaymentRepositoryCustomImpl implements PaymentRepositoryCustom {
 				.where(paymentStatusHistory.paymentId.eq(paymentId), paymentStatusHistory.deleted.isFalse())
 				.orderBy(paymentStatusHistory.id.asc())
 				.fetch();
+	}
+
+	@Override
+	public PaymentStatisticsResponse findPaymentStatistics(LocalDateTime todayStart, LocalDateTime tomorrowStart) {
+		return queryFactory
+				.select(Projections.constructor(PaymentStatisticsResponse.class,
+						payment.id.count(),
+						new CaseBuilder()
+								.when(payment.createdAt.goe(todayStart).and(payment.createdAt.lt(tomorrowStart)))
+								.then(1L).otherwise(0L).sum().coalesce(0L),
+						new CaseBuilder()
+								.when(payment.createdAt.goe(todayStart).and(payment.createdAt.lt(tomorrowStart)))
+								.then(payment.amount).otherwise(0L).sum().coalesce(0L),
+						new CaseBuilder()
+								.when(payment.createdAt.goe(todayStart)
+										.and(payment.createdAt.lt(tomorrowStart))
+										.and(payment.status.eq(PaymentStatus.DONE)))
+								.then(1L).otherwise(0L).sum().coalesce(0L),
+						new CaseBuilder()
+								.when(payment.createdAt.goe(todayStart)
+										.and(payment.createdAt.lt(tomorrowStart))
+										.and(payment.status.in(PaymentStatus.FAILED, PaymentStatus.TIMEOUT_UNKNOWN)))
+								.then(1L).otherwise(0L).sum().coalesce(0L)))
+				.from(payment)
+				.where(payment.deleted.isFalse())
+				.fetchOne();
 	}
 
 	private BooleanExpression statusEq(PaymentStatus status) {
