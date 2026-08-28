@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: PocketPay_Admin
+  profiles:
+    active: local
+
+  # PocketPay_Admin은 스키마를 소유하지 않는다 — 마이그레이션은 PocketPay_Core가 전담하고,
+  # 이 프로젝트는 같은 DB를 읽기 위주로만 붙는다. 그래서 프로파일과 무관하게 항상 꺼둔다.
+  flyway:
+    enabled: false
