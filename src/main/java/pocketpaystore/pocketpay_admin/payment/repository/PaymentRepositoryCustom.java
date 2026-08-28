@@ -1,10 +1,12 @@
 package pocketpaystore.pocketpay_admin.payment.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.time.LocalDateTime;
 
 import pocketpaystore.pocketpay_admin.payment.dto.request.PaymentSearchCondition;
+import pocketpaystore.pocketpay_admin.payment.dto.response.AttentionPaymentResponse;
+import pocketpaystore.pocketpay_admin.payment.dto.response.AttentionPaymentStatisticsResponse;
 import pocketpaystore.pocketpay_admin.payment.dto.response.PaymentDetailResponse;
 import pocketpaystore.pocketpay_admin.payment.dto.response.PaymentStatusHistoryResponse;
 import pocketpaystore.pocketpay_admin.payment.dto.response.PaymentStatisticsResponse;
@@ -18,4 +20,8 @@ public interface PaymentRepositoryCustom {
 	List<PaymentStatusHistoryResponse> findPaymentStatusHistories(Long paymentId);
 
 	PaymentStatisticsResponse findPaymentStatistics(LocalDateTime todayStart, LocalDateTime tomorrowStart);
+
+	List<AttentionPaymentResponse> findAttentionPayments(Long lastId, int size);
+
+	AttentionPaymentStatisticsResponse findAttentionPaymentStatistics(LocalDateTime staleBefore);
 }

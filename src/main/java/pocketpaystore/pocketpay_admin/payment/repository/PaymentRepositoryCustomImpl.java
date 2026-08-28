@@ -16,6 +16,8 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import pocketpaystore.pocketpay_admin.payment.domain.PaymentStatus;
 import pocketpaystore.pocketpay_admin.payment.dto.request.PaymentSearchCondition;
+import pocketpaystore.pocketpay_admin.payment.dto.response.AttentionPaymentResponse;
+import pocketpaystore.pocketpay_admin.payment.dto.response.AttentionPaymentStatisticsResponse;
 import pocketpaystore.pocketpay_admin.payment.dto.response.PaymentDetailResponse;
 import pocketpaystore.pocketpay_admin.payment.dto.response.PaymentStatusHistoryResponse;
 import pocketpaystore.pocketpay_admin.payment.dto.response.PaymentStatisticsResponse;
@@ -94,6 +96,41 @@ public class PaymentRepositoryCustomImpl implements PaymentRepositoryCustom {
 								.then(1L).otherwise(0L).sum().coalesce(0L)))
 				.from(payment)
 				.where(payment.deleted.isFalse())
+				.fetchOne();
+	}
+
+	@Override
+	public List<AttentionPaymentResponse> findAttentionPayments(Long lastId, int size) {
+		return queryFactory
+				.select(Projections.constructor(AttentionPaymentResponse.class,
+						payment.id, order.orderNumber, payment.status, payment.amount,
+						payment.failureCode, payment.failureMessage, payment.updatedAt))
+				.from(payment)
+				.join(order).on(order.id.eq(payment.orderId))
+				.where(
+						payment.id.gt(lastId),
+						payment.deleted.isFalse(),
+						payment.status.in(PaymentStatus.FAILED, PaymentStatus.TIMEOUT_UNKNOWN))
+				.orderBy(payment.id.asc())
+				.limit(size)
+				.fetch();
+	}
+
+	@Override
+	public AttentionPaymentStatisticsResponse findAttentionPaymentStatistics(LocalDateTime staleBefore) {
+		return queryFactory
+				.select(Projections.constructor(AttentionPaymentStatisticsResponse.class,
+						payment.id.count(),
+						new CaseBuilder().when(payment.status.eq(PaymentStatus.FAILED))
+								.then(1L).otherwise(0L).sum().coalesce(0L),
+						new CaseBuilder().when(payment.status.eq(PaymentStatus.TIMEOUT_UNKNOWN))
+								.then(1L).otherwise(0L).sum().coalesce(0L),
+						new CaseBuilder().when(payment.updatedAt.lt(staleBefore))
+								.then(1L).otherwise(0L).sum().coalesce(0L)))
+				.from(payment)
+				.where(
+						payment.deleted.isFalse(),
+						payment.status.in(PaymentStatus.FAILED, PaymentStatus.TIMEOUT_UNKNOWN))
 				.fetchOne();
 	}
 

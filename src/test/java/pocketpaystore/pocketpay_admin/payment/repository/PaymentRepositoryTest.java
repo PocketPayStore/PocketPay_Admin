@@ -87,6 +87,20 @@ class PaymentRepositoryTest {
 		assertThat(response.getTodayAttentionCount()).isZero();
 	}
 
+	@Test
+	void 확인이_필요한_결제와_통계를_조회한다() {
+		insertPayment(3L, 1L, "FAILED", LocalDateTime.now());
+
+		var payments = paymentRepository.findAttentionPayments(0L, 20);
+		var statistics = paymentRepository.findAttentionPaymentStatistics(LocalDateTime.now().minusMinutes(10));
+
+		assertThat(payments).extracting("id").containsExactly(3L);
+		assertThat(statistics.getTotalCount()).isEqualTo(1L);
+		assertThat(statistics.getFailedCount()).isEqualTo(1L);
+		assertThat(statistics.getTimeoutUnknownCount()).isZero();
+		assertThat(statistics.getStaleCount()).isZero();
+	}
+
 	private void insertOrder(Long id, String orderNumber, LocalDateTime createdAt) {
 		jdbcTemplate.update("""
 				insert into orders (id, order_number, created_at, updated_at, is_deleted)
