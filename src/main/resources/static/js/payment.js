@@ -263,8 +263,14 @@
             requestAnimationFrame(() => row.classList.add('updated'));
         }
         if (state.selectedPaymentId === event.paymentId) loadDetail();
-        clearTimeout(state.statisticsTimer);
-        state.statisticsTimer = setTimeout(loadStatistics, 500);
+        // A burst of payment events must not cause one statistics query per event.
+        // Refresh at most once per two seconds while keeping row updates immediate.
+        if (!state.statisticsTimer) {
+            state.statisticsTimer = setTimeout(async () => {
+                state.statisticsTimer = null;
+                await loadStatistics();
+            }, 2000);
+        }
         if (elements.searchForm.elements.status.value && elements.searchForm.elements.status.value !== event.status) {
             clearTimeout(state.refreshTimer);
             state.refreshTimer = setTimeout(() => loadPayments(false), 400);
