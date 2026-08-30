@@ -14,4 +14,9 @@ public class PaymentPageController {
 	public String attentionPayments() {
 		return "payment/attention";
 	}
+
+	@GetMapping("/admin/settlements")
+	public String settlements() {
+		return "settlement/list";
+	}
 }
