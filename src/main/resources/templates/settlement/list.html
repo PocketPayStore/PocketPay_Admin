@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>정산 관리 | PocketPay Admin</title>
+    <link rel="stylesheet" th:href="@{/css/payment.css}" href="/css/payment.css">
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar">
+        <a class="brand" href="/admin/payments"><span class="brand-mark">P</span><span><strong>PocketPay</strong><small>ADMIN</small></span></a>
+        <nav class="nav-list" aria-label="관리자 메뉴">
+            <a class="nav-item" href="/admin/payments"><span class="nav-icon">₩</span>결제 관리</a>
+            <a class="nav-item" href="/admin/payments/attention"><span class="nav-icon attention-icon">!</span>확인 필요 결제</a>
+            <a class="nav-item active" href="/admin/settlements"><span class="nav-icon">S</span>정산 관리</a>
+        </nav>
+    </aside>
+    <main class="main-content">
+        <header class="page-header"><div><p class="eyebrow">SETTLEMENT OPERATIONS</p><h1>정산 관리</h1><p class="page-description">가맹점별 정산 집계와 처리 상태를 확인합니다.</p></div></header>
+        <section class="content-card">
+            <form id="searchForm" class="search-panel">
+                <div class="field wide"><label for="vendorName">가맹점명</label><input id="vendorName" name="vendorName" type="search" placeholder="가맹점명 검색"></div>
+                <div class="field"><label for="periodStart">정산 시작일</label><input id="periodStart" name="periodStart" type="date"></div>
+                <div class="field"><label for="periodEnd">정산 종료일</label><input id="periodEnd" name="periodEnd" type="date"></div>
+                <div class="search-actions"><button class="button secondary" id="resetButton" type="button">초기화</button><button class="button primary" type="submit">검색</button></div>
+            </form>
+            <div class="table-header"><div><h2>정산 목록</h2><p id="resultDescription">정산 정보를 불러오는 중입니다.</p></div><button class="icon-button" id="refreshButton" type="button">↻</button></div>
+            <div class="table-wrap"><table><thead><tr><th>정산 ID</th><th>가맹점</th><th>정산 기간</th><th>원금</th><th>PG 수수료</th><th>플랫폼 수수료</th><th>최종 정산 금액</th><th>정산 건수</th><th>상태</th></tr></thead><tbody id="settlementTableBody"></tbody></table><div id="emptyState" class="state-view" hidden><strong>검색 결과가 없습니다.</strong></div></div>
+            <div class="pagination"><button id="previousButton" class="button secondary" type="button" disabled>이전</button><span id="pageNumber">1 페이지</span><button id="nextButton" class="button secondary" type="button" disabled>다음</button></div>
+        </section>
+    </main>
+</div>
+<script>
+(() => { const size=20, state={lastId:0,history:[0],page:0,hasNext:false}; const $=id=>document.getElementById(id); const money=v=>v==null?'-':Number(v).toLocaleString('ko-KR')+'원';
+function params(){const p=new URLSearchParams({lastId:state.history[state.page],size:size+1}); for(const n of ['vendorName','periodStart','periodEnd']) if($(n).value)p.set(n,$(n).value); return p;}
+async function load(){const r=await fetch('/api/settlements?'+params()); const data=await r.json(); state.hasNext=data.length>size; const rows=data.slice(0,size); $('settlementTableBody').innerHTML=rows.map(x=>`<tr><td>#${x.id}</td><td>${x.vendorName||'-'}</td><td>${x.periodStart} ~ ${x.periodEnd}</td><td>${money(x.originalAmount)}</td><td>${money(x.pgFeeAmount)}</td><td>${money(x.platformFeeAmount)}</td><td>${money(x.finalAmount)}</td><td>${x.settlementCount.toLocaleString('ko-KR')}건</td><td><span class="status-badge status-done">정산 완료</span></td></tr>`).join(''); $('emptyState').hidden=rows.length>0; $('resultDescription').textContent=rows.length+'건의 정산을 표시하고 있습니다.'; $('previousButton').disabled=state.page===0; $('nextButton').disabled=!state.hasNext; $('pageNumber').textContent=(state.page+1)+' 페이지';}
+function reset(){state.history=[0];state.page=0;load();} $('searchForm').addEventListener('submit',e=>{e.preventDefault();reset();}); $('resetButton').addEventListener('click',()=>{$('searchForm').reset();reset();}); $('refreshButton').addEventListener('click',load); $('previousButton').addEventListener('click',()=>{if(state.page){state.page--;load();}}); $('nextButton').addEventListener('click',()=>{if(state.hasNext){const id=document.querySelector('#settlementTableBody tr:last-child td')?.textContent.replace('#','');state.history.push(Number(id));state.page++;load();}}); load(); })();
+</script>
+</body>
+</html>
